@@ -3,23 +3,27 @@ require 'oauth'
 require 'system_timer'
 require 'md5'
 
-subcommands = %w( albums upload )
+commands = [
+    ["albums", "List SmugMug albums on the server"],
+    ["upload", "Upload files to SmugMug"]
+]
 
 opts = Trollop::options do
     banner <<-END
-Usage: smugctl OPTIONS... COMMAND COMMAND_OPTIONS
-Controls and synchronizes SmugMug photos and videos.
+Usage: smug [<options>] <command> [<args>]
+Manage SmugMug photos and videos.
 
-Examples:
-smugctl albums list
-smugctl upload ALBUM_ID ALBUM_KEY FILES...
+The most commonly used smug commands are:
+#{commands.map { |cmd, description| sprintf("   %-11s%s", cmd, description) }.join("\n")}
+
+See 'smug help <command>' for more information on a specific command.
 
 Options:
     END
     opt :verbose,
         "Explain what is being done",
         :short => :v
-    stop_on subcommands
+    stop_on commands
 end
 
 command = nil
@@ -30,7 +34,7 @@ cmd_opts = case cmd_arg
     when "upload"
         command = :upload
     when nil
-        Trollop::die "command required: #{subcommands.join(', ')}"
+        Trollop::die "command required"
     else
         Trollop::die "unknown command #{cmd_arg}"
 end
@@ -79,7 +83,7 @@ def upload_command(access_token)
         end
 
         begin
-            SystemTimer.timeout_after(300) do
+            SystemTimer.timeout_after(1800) do
                 puts "Uploading #{filename} (#{Time.now.to_s}) (#{i}/#{num_files})"
 
                 data = File.open(filename, "rb") { |f| f.read }
