@@ -26,21 +26,18 @@ Options:
     stop_on commands
 end
 
+command = nil
 opts = Trollop::with_standard_exception_handling(optparser) do
     optparser.parse(ARGV)
-    raise Trollop::HelpNeeded if ARGV.empty?
-end
+    cmd_arg = ARGV.shift
+    raise Trollop::HelpNeeded if cmd_arg.nil? or cmd_arg.empty?
 
-command = nil
-cmd_arg = ARGV.shift
-
-cmd_opts = case cmd_arg
-    when "albums"
-        command = :albums
-    when "upload"
-        command = :upload
+    if commands.map { |cmd, description| cmd }.include? cmd_arg
+        command = cmd_arg.to_sym
     else
-        Trollop::die "unknown command #{cmd_arg}"
+        $stderr.puts "smug: '#{cmd_arg}' is not a smug command. See 'smug --help'."
+        exit(-1)
+    end
 end
 
 # Commands
