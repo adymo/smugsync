@@ -113,41 +113,47 @@ def upload_command(access_token)
     end
 end
 
-
-# Script body itself
-
-config = if File.exists?(CONFIG_FILE)
-    JSON.parse(File.read(CONFIG_FILE), :symbolize_names => true) 
-else
-    {}
-end
-
-consumer = OAuth::Consumer.new API_KEY, API_SECRET, {
-    :site => "https://secure.smugmug.com",
-    :request_token_path => "/services/oauth/getRequestToken.mg",
-    :access_token_path => "/services/oauth/getAccessToken.mg",
-    :authorize_path => "/services/oauth/authorize.mg"
-}
-
-unless config[:access_token]
-    # need to request access token from the user
-    request_token = consumer.get_request_token
-    puts "Authorize app at #{request_token.authorize_url}&Access=Full&Permissions=Modify\nPress Enter when finished"
-    gets
-    access_token = request_token.get_access_token
-
-    config[:access_token] = {
-        :secret => access_token.secret,
-        :token => access_token.token
-    }
-    File.open(CONFIG_FILE, "w+") do |f|
-        f.puts config.to_json
+def authenticate
+    config = if File.exists?(CONFIG_FILE)
+        JSON.parse(File.read(CONFIG_FILE), :symbolize_names => true) 
+    else
+        {}
     end
+
+    consumer = OAuth::Consumer.new API_KEY, API_SECRET, {
+        :site => "https://secure.smugmug.com",
+        :request_token_path => "/services/oauth/getRequestToken.mg",
+        :access_token_path => "/services/oauth/getAccessToken.mg",
+        :authorize_path => "/services/oauth/authorize.mg"
+    }
+
+    unless config[:access_token]
+        # need to request access token from the user
+        request_token = consumer.get_request_token
+        puts "Authorize app at #{request_token.authorize_url}&Access=Full&Permissions=Modify\nPress Enter when finished"
+        gets
+        access_token = request_token.get_access_token
+
+        config[:access_token] = {
+            :secret => access_token.secret,
+            :token => access_token.token
+        }
+        File.open(CONFIG_FILE, "w+") do |f|
+            f.puts config.to_json
+        end
+    end
+
+    access_token = OAuth::AccessToken.new(consumer)
+    access_token.secret = config[:access_token][:secret]
+    access_token.token = config[:access_token][:token]
+    access_token
 end
 
-access_token = OAuth::AccessToken.new(consumer)
-access_token.secret = config[:access_token][:secret]
-access_token.token = config[:access_token][:token]
+def execute_command(command)
+    access_token = authenticate
+    send("#{command}_command", access_token)
+end
 
 
-send("#{command}_command", access_token)
+# Script body
+execute_command(command)
