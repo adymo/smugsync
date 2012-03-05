@@ -2,8 +2,10 @@ require 'trollop'
 require 'oauth'
 require 'system_timer'
 require 'md5'
+require 'fileutils'
 
 commands = [
+    ["init", "Initialize current folder as SmugMug folder and authorize with SmugMug"],
     ["albums", "List SmugMug albums on the server"],
     ["upload", "Upload files to SmugMug"]
 ]
@@ -113,35 +115,82 @@ def upload_command(access_token)
     end
 end
 
-def authenticate
-    config = if File.exists?(CONFIG_FILE)
-        JSON.parse(File.read(CONFIG_FILE), :symbolize_names => true) 
-    else
-        {}
+def find_config_dir
+    # search current dir and upwards until we find .smug dir
+    config_dir = nil
+    dir = '.'
+    while File.expand_path(dir) != '/' do
+        config_dir_candidate = File.join(File.expand_path(dir), '.smug')
+        if File.exists?(config_dir_candidate)
+            config_dir = config_dir_candidate
+            break
+        end
+        dir = File.join(dir, '..')
     end
+    config_dir
+end
 
+def create_config_dir
+    # create .smug in the current directory
+    config_dir = File.join(Dir.pwd, '.smug')
+    FileUtils.mkdir_p(config_dir)
+end
+
+def config_file_name(basename)
+    unless config_dir = find_config_dir
+        $stderr.puts <<-EOS
+Fatal: Not a SmugMug folder (or any parent up to root).
+Run 'smug init' to initialize current folder as SmugMug folder.
+        EOS
+        exit(-1)
+    end
+    File.join(File.expand_path(config_dir), basename)
+end
+
+def oauth_consumer
     consumer = OAuth::Consumer.new API_KEY, API_SECRET, {
         :site => "https://secure.smugmug.com",
         :request_token_path => "/services/oauth/getRequestToken.mg",
         :access_token_path => "/services/oauth/getAccessToken.mg",
         :authorize_path => "/services/oauth/authorize.mg"
     }
+end
 
-    unless config[:access_token]
-        # need to request access token from the user
-        request_token = consumer.get_request_token
-        puts "Authorize app at #{request_token.authorize_url}&Access=Full&Permissions=Modify\nPress Enter when finished"
-        gets
+def authorize
+    consumer = oauth_consumer
+    # need to request access token from the user
+    request_token = consumer.get_request_token
+    puts <<-EOS
+Authorize app at:
+#{request_token.authorize_url}&Access=Full&Permissions=Modify
+Press Enter when finished
+    EOS
+    gets
+    access_token = nil
+    begin
         access_token = request_token.get_access_token
+    rescue OAuth::Unauthorized
+        $stderr.puts "Fatal: Could not authorize with SmugMug. Run 'smug init' again."
+        exit(-1)
+    end
 
-        config[:access_token] = {
+    config = {
+        :access_token => {
             :secret => access_token.secret,
             :token => access_token.token
         }
-        File.open(CONFIG_FILE, "w+") do |f|
-            f.puts config.to_json
-        end
+    }
+    create_config_dir
+    File.open(config_file_name(ACCESS_TOKEN_CONFIG_FILE), "w+") do |f|
+        f.puts JSON.pretty_generate(config)
     end
+    puts "Initialized SmugMug folder and authorized with SmugMug"
+end
+
+def authenticate
+    config = JSON.parse(File.read(config_file_name(ACCESS_TOKEN_CONFIG_FILE)), :symbolize_names => true)
+
+    consumer = oauth_consumer
 
     access_token = OAuth::AccessToken.new(consumer)
     access_token.secret = config[:access_token][:secret]
@@ -150,6 +199,10 @@ def authenticate
 end
 
 def execute_command(command)
+    if command == :init
+        authorize
+        return
+    end
     access_token = authenticate
     send("#{command}_command", access_token)
 end
