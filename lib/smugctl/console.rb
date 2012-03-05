@@ -8,7 +8,7 @@ commands = [
     ["upload", "Upload files to SmugMug"]
 ]
 
-opts = Trollop::options do
+optparser = Trollop::Parser.new do
     banner <<-END
 Usage: smug [<options>] <command> [<args>]
 Manage SmugMug photos and videos.
@@ -26,15 +26,19 @@ Options:
     stop_on commands
 end
 
+opts = Trollop::with_standard_exception_handling(optparser) do
+    optparser.parse(ARGV)
+    raise Trollop::HelpNeeded if ARGV.empty?
+end
+
 command = nil
 cmd_arg = ARGV.shift
+
 cmd_opts = case cmd_arg
     when "albums"
         command = :albums
     when "upload"
         command = :upload
-    when nil
-        Trollop::die "command required"
     else
         Trollop::die "unknown command #{cmd_arg}"
 end
