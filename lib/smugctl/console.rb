@@ -13,7 +13,7 @@ optparser = Trollop::Parser.new do
 Usage: smug [<options>] <command> [<args>]
 Manage SmugMug photos and videos.
 
-The most commonly used smug commands are:
+Available smug commands are:
 #{commands.map { |cmd, description| sprintf("   %-11s%s", cmd, description) }.join("\n")}
 
 See 'smug help <command>' for more information on a specific command.
