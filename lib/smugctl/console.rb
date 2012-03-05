@@ -55,7 +55,7 @@ def albums_command(access_token)
             printf(format, a["id"], a["Key"], a["Title"])
         end
     else
-        $stderr.puts "unknown command #{cmd}"
+        $stderr.puts "albums: unknown command #{cmd}"
         exit(1)
     end
 end
