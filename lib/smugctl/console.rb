@@ -1,5 +1,7 @@
 require 'trollop'
 
+$KCODE = 'u'
+
 commands = [
     ["init", "Initialize current folder as SmugMug folder and authorize with SmugMug"],
     ["albums", "List SmugMug albums on the server"],
