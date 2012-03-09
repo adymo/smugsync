@@ -5,6 +5,12 @@ class StatusCommand < Command
 
     include Utils
 
+    ALBUM_STATUS_FORMAT = "%20s\t%s/(%s files)"
+    ALBUM_MODIFIED_STATUS_FORMAT = "%20s\t%s"
+    IMAGES_STATUS_FORMAT = "%20s\t%s/(%s files)"
+    IMAGE_STATUS_FORMAT = "%20s\t%s/%s"
+    FILE_OUTPUT_COUNT_LIMIT = 10
+
     def exec
         authenticate
         @albums = JSON::parse Config::config_file("cache", "r").read
@@ -15,7 +21,9 @@ class StatusCommand < Command
         if current_dir == '.'
             compare_albums
         else
-            compare_album(current_dir)
+            Dir::cwd("..")
+            compare_album(@albums.find { |a| a["Title"] == current_dir })
+            Dir::cwd(current_dir)
         end
     end
 
@@ -30,18 +38,37 @@ private
                 local_albums_uploaded << album["Title"]
                 compare_album(album)
             else
-                puts sprintf("%20s\t%s/(%s files)", "not downloaded", album["Title"], album["Images"].length)
+                puts sprintf(ALBUM_STATUS_FORMAT, "not downloaded", album["Title"], album["Images"].length)
             end
         end
 
         (local_albums - local_albums_uploaded).each do |local_album|
-            puts sprintf("%20s\t%s/(%s files)", "not uploaded", local_album, Pathname.new(local_album).children(false).length)
+            puts sprintf(ALBUM_STATUS_FORMAT, "not uploaded", local_album, Pathname.new(local_album).children(false).length)
         end
     end
 
-    # returns true if album is the same locally and remotely
     def compare_album(album)
-        # TODO: implement me
+        local_images = Pathname.new(album["Title"]).children(false).map { |p| p.basename.to_s.downcase }
+        remote_images = album["Images"].map {|p| p["FileName"].downcase }
+
+        not_uploaded = local_images - remote_images
+        not_downloaded = remote_images - local_images
+
+        if not_uploaded.length > FILE_OUTPUT_COUNT_LIMIT
+                puts sprintf(IMAGES_STATUS_FORMAT, "not uploaded", album["Title"], not_uploaded.length)
+        elsif not_uploaded.length > 0
+            not_uploaded.each do |p|
+                puts sprintf(IMAGE_STATUS_FORMAT, "not uploaded", album["Title"], p)
+            end
+        end
+
+        if not_downloaded.length > FILE_OUTPUT_COUNT_LIMIT
+                puts sprintf(IMAGES_STATUS_FORMAT, "not downloaded", album["Title"], not_downloaded.length)
+        elsif not_downloaded.length > 0
+            not_downloaded.each do |p|
+                puts sprintf(IMAGE_STATUS_FORMAT, "not downloaded", album["Title"], p)
+            end
+        end
     end
 
 end
