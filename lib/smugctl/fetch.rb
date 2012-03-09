@@ -14,7 +14,7 @@ class FetchCommand < Command
             album["Images"] = images
             status_message "."
         end
-        cache_file = Config::config_file("cache")
+        cache_file = Config::config_file("cache", "w+")
         cache_file.puts JSON::pretty_generate(albums)
         cache_file.close
         status_message " done\n"

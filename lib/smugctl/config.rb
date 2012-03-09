@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'pathname'
 
 module Smug
 
@@ -24,7 +25,13 @@ module Config
             end
             dir = File.join(dir, '..')
         end
-        config_dir
+        File.expand_path(config_dir)
+    end
+
+    def relative_to_root(dir)
+        root_dir = Pathname.new(File.join(find_config_dir, '..'))
+        pn = Pathname.new(dir)
+        pn.relative_path_from(root_dir)
     end
 
     def create_config_dir
@@ -36,20 +43,20 @@ module Config
     def config_file_name(basename)
         unless config_dir = find_config_dir
             $stderr.puts <<-EOS
-    Fatal: Not a SmugMug folder (or any parent up to root).
-    Run 'smug init' to initialize current folder as SmugMug folder.
+Fatal: Not a SmugMug folder (or any parent up to root).
+Run 'smug init' to initialize current folder as SmugMug folder.
             EOS
             exit(-1)
         end
-        File.join(File.expand_path(config_dir), basename)
+        File.join(config_dir, basename)
     end
 
     # Returns config File object for given name. Creates a file if it doesn't exist
-    def config_file(name)
-        File.open(config_file_name(name), "w+")
+    def config_file(name, mode)
+        File.open(config_file_name(name), mode)
     end
 
-    module_function :config_file_name, :find_config_dir, :create_config_dir, :config_file
+    module_function :config_file_name, :find_config_dir, :create_config_dir, :config_file, :relative_to_root
 
 end
 
