@@ -44,7 +44,12 @@ module Config
         File.join(File.expand_path(config_dir), basename)
     end
 
-    module_function :config_file_name, :find_config_dir, :create_config_dir
+    # Returns config File object for given name. Creates a file if it doesn't exist
+    def config_file(name)
+        File.open(config_file_name(name), "w+")
+    end
+
+    module_function :config_file_name, :find_config_dir, :create_config_dir, :config_file
 
 end
 

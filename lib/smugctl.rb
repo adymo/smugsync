@@ -1,6 +1,8 @@
 require 'json'
 require 'smugctl/config'
+require 'smugctl/utils'
 require 'smugctl/command'
 require 'smugctl/albums'
 require 'smugctl/upload'
 require 'smugctl/init'
+require 'smugctl/fetch'

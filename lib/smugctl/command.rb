@@ -5,6 +5,8 @@ module Smug
 # Base class for all commands
 class Command
 
+    include Utils
+
     # Executes default subcommand, by default 'help'
     # Reimplement in subclasses
     def exec
