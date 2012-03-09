@@ -22,7 +22,7 @@ class StatusCommand < Command
 private
 
     def compare_albums
-        local_albums = Pathname::pwd.children(false).find_all { |a| a.directory? and a.basename.to_s != ".smug" }.map { |a| a.basename }
+        local_albums = Pathname::pwd.children(false).find_all { |a| a.directory? and a.basename.to_s != ".smug" }.map { |a| a.basename.to_s }
         local_albums_uploaded = []
 
         @albums.each do |album|
