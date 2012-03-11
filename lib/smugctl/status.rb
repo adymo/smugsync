@@ -6,70 +6,104 @@ class StatusCommand < Command
     include Utils
 
     ALBUM_STATUS_FORMAT = "%20s\t%s/(%s files)"
-    ALBUM_MODIFIED_STATUS_FORMAT = "%20s\t%s"
-    IMAGES_STATUS_FORMAT = "%20s\t%s/(%s files)"
     IMAGE_STATUS_FORMAT = "%20s\t%s/%s"
-    FILE_OUTPUT_COUNT_LIMIT = 10
 
     def exec
         authenticate
-        # TODO: status doesn't work without cache
-        @albums = JSON::parse Config::config_file("cache", "r").read
 
         # TODO: support categories and nested categories
         # for now comparison supports only flat list of albums
+        status = current_dir_status
+        status.each do |album_status|
+            if album_status[:status] != :not_modified
+                puts sprintf(ALBUM_STATUS_FORMAT, album_status[:status], album_status[:album], album_status[:images].length)
+            else
+                album_status[:images].each do |image_status|
+                    puts sprintf(IMAGE_STATUS_FORMAT, image_status[:status], album_status[:album], image_status[:image])
+                end
+            end
+        end
+    end
+
+    def current_dir_status
         current_dir = Config::relative_to_root(Dir.pwd).to_s
         if current_dir == '.'
-            compare_albums
+            albums_status
         else
-            Dir::cwd("..")
-            compare_album(@albums.find { |a| a["Title"] == current_dir })
-            Dir::cwd(current_dir)
+            Dir::chdir('..')
+            status = [album_status(
+                :local => current_dir,
+                :remote => albums.find { |a| a["Title"] == current_dir }
+            )]
+            Dir::chdir(current_dir)
+            status
+        end
+    end
+
+    def albums_status
+        status = []
+
+        local_albums = Pathname::pwd.children(false).find_all { |a| a.directory? and a.basename.to_s != ".smug" }.map { |a| a.basename.to_s }
+        remote_albums = albums.map { |a| a["Title"] }
+
+        status += albums.map do |album|
+            album_status(
+                :remote => album,
+                :local => local_albums.find { |a| a == album["Title"] }
+            )
+        end
+        status += (local_albums - remote_albums).map do |local_album|
+            album_status(:remote => nil, :local => local_album)
+        end
+
+        status
+    end
+
+    def album_status(options = { :local => nil, :remote => nil })
+        local = options[:local]
+        remote = options[:remote]
+
+        if !local and !remote
+            raise "album_status: requires either local or remote album"
+        elsif local and !remote
+            {
+                :album => local,
+                :status => :not_uploaded,
+                :images => local_images(local).map { |img| { :image => img, :status => :not_uploaded} }
+            }
+        elsif !local and remote
+            {
+                :album => remote["Title"],
+                :status => :not_downloaded,
+                :images => remote_images(remote).map { |img| { :image => img, :status => :not_downloaded} }
+            }
+        else
+            # TODO: assure that local and remote titles are the same
+            # TODO: document case insensitivity
+            not_uploaded = local_images(local) - remote_images(remote)
+            not_downloaded = remote_images(remote) - local_images(local)
+
+            {
+                :album => remote["Title"],
+                :status => :not_modified,
+                :images => not_uploaded.map { |img| { :image => img, :status => :not_uploaded} } + not_downloaded.map { |img| { :image => img, :status => :not_downloaded} }
+            }
         end
     end
 
 private
 
-    def compare_albums
-        local_albums = Pathname::pwd.children(false).find_all { |a| a.directory? and a.basename.to_s != ".smug" }.map { |a| a.basename.to_s }
-        local_albums_uploaded = []
-
-        @albums.each do |album|
-            if local_albums.include? album["Title"]
-                local_albums_uploaded << album["Title"]
-                compare_album(album)
-            else
-                puts sprintf(ALBUM_STATUS_FORMAT, "not downloaded", album["Title"], album["Images"].length)
-            end
-        end
-
-        (local_albums - local_albums_uploaded).each do |local_album|
-            puts sprintf(ALBUM_STATUS_FORMAT, "not uploaded", local_album, Pathname.new(local_album).children(false).length)
-        end
+    def albums
+        # TODO: status doesn't work without cache
+        @albums ||= JSON::parse Config::config_file("cache", "r").read
     end
 
-    def compare_album(album)
-        local_images = Pathname.new(album["Title"]).children(false).map { |p| p.basename.to_s.downcase }
-        remote_images = album["Images"].map {|p| p["FileName"].downcase }
+    def local_images(album_path)
+        Pathname.new(album_path).children(false).map { |p| p.basename.to_s.downcase }
+    end
 
-        not_uploaded = local_images - remote_images
-        not_downloaded = remote_images - local_images
-
-        if not_uploaded.length > FILE_OUTPUT_COUNT_LIMIT
-                puts sprintf(IMAGES_STATUS_FORMAT, "not uploaded", album["Title"], not_uploaded.length)
-        elsif not_uploaded.length > 0
-            not_uploaded.each do |p|
-                puts sprintf(IMAGE_STATUS_FORMAT, "not uploaded", album["Title"], p)
-            end
-        end
-
-        if not_downloaded.length > FILE_OUTPUT_COUNT_LIMIT
-                puts sprintf(IMAGES_STATUS_FORMAT, "not downloaded", album["Title"], not_downloaded.length)
-        elsif not_downloaded.length > 0
-            not_downloaded.each do |p|
-                puts sprintf(IMAGE_STATUS_FORMAT, "not downloaded", album["Title"], p)
-            end
-        end
+    def remote_images(album)
+        album["Images"].map {|p| p["FileName"].downcase }
     end
 
 end
