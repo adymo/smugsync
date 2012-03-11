@@ -1,4 +1,5 @@
 require 'oauth'
+require 'uri'
 
 module Smug
 
@@ -25,14 +26,14 @@ protected
         request_params = params.dup
         request_params["method"] = method
         response = access_token.request(:get,
-            Smug::Config::SMUGMUG_REQUEST_URL + "?" +
-                request_params.map { |key, value| "#{key}=#{value}" }.join("&")
+            URI.escape(Smug::Config::SMUGMUG_REQUEST_URL + "?" +
+                request_params.map { |key, value| "#{key}=#{value}" }.join("&"))
         )
         JSON.parse(response.body)
     end
 
     def put(url, data, headers)
-        response = access_token.put(url, data, headers)
+        response = access_token.put(URI.escape(url), data, headers)
         begin
             JSON.parse(response.body)
         rescue Exception => e
