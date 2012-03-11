@@ -28,8 +28,11 @@ module Config
         File.expand_path(config_dir)
     end
 
+    def root_dir
+        Pathname.new(File.join(find_config_dir, '..'))
+    end
+
     def relative_to_root(dir)
-        root_dir = Pathname.new(File.join(find_config_dir, '..'))
         pn = Pathname.new(dir)
         pn.relative_path_from(root_dir)
     end
@@ -56,7 +59,7 @@ Run 'smug init' to initialize current folder as SmugMug folder.
         File.open(config_file_name(name), mode)
     end
 
-    module_function :config_file_name, :find_config_dir, :create_config_dir, :config_file, :relative_to_root
+    module_function :config_file_name, :find_config_dir, :create_config_dir, :config_file, :relative_to_root, :root_dir
 
 end
 
