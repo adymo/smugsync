@@ -7,6 +7,7 @@ class InitCommand < Command
     def exec
         # need to request access token from the user
         request_token = oauth_consumer.get_request_token
+        # TODO: explain what happens better
         puts <<-EOS
 Authorize app at:
 #{request_token.authorize_url}&Access=Full&Permissions=Modify
