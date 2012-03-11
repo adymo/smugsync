@@ -33,7 +33,12 @@ protected
 
     def put(url, data, headers)
         response = access_token.put(url, data, headers)
-        JSON.parse(response.body)
+        begin
+            JSON.parse(response.body)
+        rescue Exception => e
+            puts "put: invalid JSON response:\n#{response.body}"
+            raise e
+        end
     end
 
 private
