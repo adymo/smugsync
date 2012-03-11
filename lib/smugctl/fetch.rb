@@ -1,6 +1,7 @@
 
 module Smug
 
+# TODO: maybe rename
 class FetchCommand < Command
 
     def exec

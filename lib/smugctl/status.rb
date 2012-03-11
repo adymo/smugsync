@@ -13,6 +13,7 @@ class StatusCommand < Command
 
     def exec
         authenticate
+        # TODO: status doesn't work without cache
         @albums = JSON::parse Config::config_file("cache", "r").read
 
         # TODO: support categories and nested categories
