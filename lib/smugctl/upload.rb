@@ -34,6 +34,7 @@ class UploadCommand < Command
 
             files_to_upload = album_status[:images].find_all { |i| i[:status] == :not_uploaded }.map { |i| "#{album["Title"]}/#{i[:image]}" }
 
+            File.open("upload.log", "w+") { |f| f.puts "start" }
             num_files = files_to_upload.length
             files_to_upload.each_with_index do |filename, i|
                 begin
@@ -55,11 +56,13 @@ class UploadCommand < Command
                     end
                 rescue Timeout::Error
                     puts " => timed out"
+                    File.open("upload.log", "a") { |f| f.puts filename }
 
                     # TODO: delete image from server
                 rescue Exception => e
                     puts " => error #{e.message}"
                     puts e.backtrace.join("\n")
+                    File.open("upload.log", "a") { |f| f.puts filename }
 
                     # TODO: delete image from server
                 end
