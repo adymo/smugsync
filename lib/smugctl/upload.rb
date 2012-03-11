@@ -38,7 +38,7 @@ class UploadCommand < Command
             num_files = files_to_upload.length
             files_to_upload.each_with_index do |filename, i|
                 begin
-                    SystemTimer.timeout_after(1800) do
+                    SystemTimer.timeout_after(300) do
                         puts "Uploading #{filename} (#{Time.now.to_s}) (#{i}/#{num_files})"
 
                         data = File.open(filename, "rb") { |f| f.read }
