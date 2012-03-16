@@ -25,7 +25,7 @@ module Config
             end
             dir = File.join(dir, '..')
         end
-        File.expand_path(config_dir)
+        config_dir && File.expand_path(config_dir)
     end
 
     def root_dir
