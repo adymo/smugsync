@@ -1,5 +1,6 @@
 require 'system_timer'
 require 'md5'
+require 'set'
 
 module Smug
 
@@ -17,15 +18,25 @@ class UploadCommand < Command
         status = StatusCommand.new.current_dir_status
         Dir::chdir(Config::root_dir)
 
+        modified_albums = Set.new
+
         status.each_with_index do |album_status, i|
             if album_status[:status] == :not_uploaded
                 # create album
+                puts "Creating album #{album_status[:album]}"
                 result = smugmug_albums_create(
                     "Title" => album_status[:album]
                 )
                 raise "Cannot create album" unless result["stat"] == "ok"
-                # refresh cache
-                FetchCommand.new.exec
+
+                # refresh cache for the newly created album
+                album = smugmug_albums_getInfo(
+                    :AlbumID => result["Album"]["id"],
+                    :AlbumKey => result["Album"]["Key"]
+                )["Album"]
+
+                FetchCommand.new.refresh_cache([album])
+                @albums = nil # TODO: hack to force reparsing of cache file
             elsif album_status[:status] == :not_downloaded
                 next
             end
@@ -37,6 +48,8 @@ class UploadCommand < Command
             File.open("upload.log", "w+") { |f| f.puts "start" }
             num_files = files_to_upload.length
             files_to_upload.each_with_index do |filename, i|
+                modified_albums << album
+
                 begin
                     SystemTimer.timeout_after(300) do
                         puts "Uploading #{filename} (#{Time.now.to_s}) (#{i}/#{num_files})"
@@ -68,6 +81,10 @@ class UploadCommand < Command
                 end
             end
         end
+
+        # refresh cache for modified albums only
+        puts "Refreshing albums cache"
+        FetchCommand.new.refresh_cache(modified_albums, :force => true)
     end
 
 private
