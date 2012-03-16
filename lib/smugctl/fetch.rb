@@ -7,29 +7,71 @@ class FetchCommand < Command
     def exec
         authenticate
 
-        cached_albums = JSON::parse Config::config_file("cache", "r").read
-
         status_message "Refreshing albums cache"
-        albums = smugmug_albums_get(:Heavy => true)["Albums"]
-        status_message "."
+        refresh_cache(:all_albums) { |album, cache_status| status_message "." }
+        status_message " done\n"
+    end
 
-        albums.each do |album|
-            # getting the list of images from album is a lengthy operation
-            # so skip it if album hasn't changed
-            cached_album = cached_albums.find { |a| a["id"] == album["id"] }
-            if cached_album and album["LastUpdated"] == album["LastUpdated"]
-                status_message "."
-                next
+    # block is executed for each album with two argumens: album and cache_status
+    # cache_status is:
+    # - :refreshed      album cache was refreshed
+    # - :fresh          album in cache is the same as in server
+    # options can be:
+    # - :force => true  list of album's images is always refreshed
+    #   this is necessary for refreshing cache after uploads and here's why:
+    #   - smugmug stores LastUpdated data for albums with 1 second precision
+    #   - upload can be fast enough to create album and add image to the album
+    #     in one second
+    def refresh_cache(albums_to_refresh, options = {}, &block)
+        authenticate
+
+        old_cache = if File.exist?(Config::config_file_name("cache"))
+            JSON::parse(Config::config_file("cache", "r").read)
+        else
+            []
+        end
+
+        # - to refresh all albums we need to reconstruct the cache from scratch
+        #   to make sure that deleted albums are not left in the cache
+        # - to refresh selected albums we start from existing cache
+        #   and replace only refreshed albums in that cache
+        albums_on_server = smugmug_albums_get(:Heavy => true)["Albums"]
+        if albums_to_refresh == :all_albums
+            albums_to_refresh = albums_on_server
+            new_cache = []
+        else
+            albums_to_refresh_ids = albums_to_refresh.map { |a| a["id"] }
+            # refetch albums metadata
+            albums_to_refresh = albums_on_server.select { |a| albums_to_refresh_ids.include?(a["id"]) }
+            # leave albums that should not be refreshed in the cache
+            new_cache = old_cache.reject { |a| albums_to_refresh_ids.include?(a["id"]) }
+        end
+
+        albums_to_refresh.each do |album|
+            cached_album = old_cache.find { |a| a["id"] == album["id"] }
+
+            if !options[:force] and cached_album and cached_album["LastUpdated"] == album["LastUpdated"]
+                # album is in cache and is not changed: copy images from old cache
+                # because it can take a long time to get the list of images
+                # from server for large albums
+                album["Images"] = cached_album["Images"]
+                yield(album, :skipped) if block_given?
+            else
+                # album was changed, get the list of images
+                album["Images"] = smugmug_images_get(
+                    :AlbumID => album["id"],
+                    :AlbumKey => album["Key"],
+                    :Heavy => true
+                )["Album"]["Images"]
+                yield(album, :refreshed) if block_given?
             end
 
-            images = smugmug_images_get(:AlbumID => album["id"], :AlbumKey => album["Key"], :Heavy => true)["Album"]["Images"]
-            album["Images"] = images
-            status_message "."
+            new_cache << album
         end
+
         cache_file = Config::config_file("cache", "w+")
-        cache_file.puts JSON::pretty_generate(albums)
+        cache_file.puts JSON::pretty_generate(new_cache)
         cache_file.close
-        status_message " done\n"
     end
 
 end
