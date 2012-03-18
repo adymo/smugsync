@@ -1,5 +1,3 @@
-require 'trollop'
-
 $KCODE = 'u'
 
 commands = [
@@ -8,6 +6,7 @@ commands = [
     ["upload", "Upload files to SmugMug"],
     ["status", "Show the status of local SmugMug folder"],
     ["fetch", "Fetch the list of albums and images from the server"],
+    ["download", "Download files from SmugMug"],
 ]
 
 optparser = Trollop::Parser.new do
