@@ -43,7 +43,7 @@ class DownloadCommand < Command
                    source_album = albums.find { |a| a["id"] == image["Album"]["id"] }
                    source_image = source_album["Images"].find { |img| img["id"] == image["id"] }
                    source_filename = source_album["Title"] + "/" + source_image["FileName"]
-                   target_filename = album["Title"] + "/" + image["FileName"]
+                   target_filename = album["Title"] + sprintf("/%03d.", i+1) + image["FileName"]
 
                    puts "   ln #{target_filename} #{source_filename}"
                    FileUtils::ln(source_filename, target_filename)

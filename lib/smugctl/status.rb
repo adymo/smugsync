@@ -99,7 +99,9 @@ private
     end
 
     def local_images(album_path)
-        Pathname.new(album_path).children(false).map { |p| p.basename.to_s.downcase }
+        Pathname.new(album_path).children(false).map do |p|
+            p.basename.to_s.downcase.gsub(/^\d\d\d\./, '')
+        end
     end
 
     def remote_images(album)
