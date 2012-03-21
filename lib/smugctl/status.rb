@@ -99,7 +99,17 @@ private
     end
 
     def local_images(album_path)
-        Pathname.new(album_path).children(false).map do |p|
+        ignore_list = []
+
+        ignore_file_name = Pathname.new(album_path).join(".smugignore")
+        if File.exists?(ignore_file_name)
+            ignore_list = File.read(ignore_file_name).split($/)
+        end
+
+        Pathname.new(album_path).children(false).reject do |p|
+            filename = p.basename.to_s
+            filename == '.smugignore' or ignore_list.include? filename
+        end.map do |p|
             p.basename.to_s.downcase.gsub(/^\d\d\d\./, '')
         end
     end
