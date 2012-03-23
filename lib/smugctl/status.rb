@@ -110,12 +110,12 @@ private
             filename = p.basename.to_s
             filename == '.smugignore' or ignore_list.include? filename
         end.map do |p|
-            p.basename.to_s.downcase.gsub(/^\d\d\d\./, '')
+            p.basename.to_s.gsub(/^\d\d\d\./, '')
         end
     end
 
     def remote_images(album)
-        album["Images"].map {|p| p["FileName"].downcase }
+        album["Images"].map {|p| p["FileName"] }
     end
 
 end

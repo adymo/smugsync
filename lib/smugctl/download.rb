@@ -29,7 +29,7 @@ class DownloadCommand < Command
             files_to_download = album_status[:images].find_all do |i|
                 i[:status] == :not_downloaded
             end.map do |i|
-                album["Images"].find { |img| i[:image].downcase == img["FileName"].downcase }
+                album["Images"].find { |img| i[:image] == img["FileName"] }
             end
             num_files = files_to_download.length
 
