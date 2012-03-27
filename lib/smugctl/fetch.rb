@@ -5,10 +5,26 @@ module Smug
 class FetchCommand < Command
 
     def exec
+        optparser = Trollop::Parser.new do
+            banner <<-END
+Usage: smug fetch [<options>]
+Show the status of local SmugMug folder.
+
+Options:
+            END
+            opt :force,
+                "Force full refresh of albums and images list",
+                :short => :f
+        end
+
+        opts = Trollop::with_standard_exception_handling(optparser) do
+            optparser.parse(ARGV)
+        end
+
         authenticate
 
         status_message "Refreshing albums cache"
-        refresh_cache(:all_albums) { |album, cache_status| status_message "." }
+        refresh_cache(:all_albums, opts) { |album, cache_status| status_message "." }
         status_message " done\n"
     end
 
