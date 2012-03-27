@@ -13,6 +13,23 @@ class UploadCommand < Command
     #   3.1. create it if it doesn't exist
     #   3.2. upload files
     def exec
+        optparser = Trollop::Parser.new do
+            banner <<-END
+Usage: smug upload [<options>]
+Upload files to SmugMug.
+
+Options:
+            END
+            opt :timeout,
+                "Timeout to upload one file in seconds",
+                :short => :t,
+                :default => 24*3600
+        end
+
+        opts = Trollop::with_standard_exception_handling(optparser) do
+            optparser.parse(ARGV)
+        end
+
         authenticate
 
         status = StatusCommand.new.current_dir_status
@@ -51,7 +68,7 @@ class UploadCommand < Command
                 modified_albums << album
 
                 begin
-                    SystemTimer.timeout_after(300) do
+                    SystemTimer.timeout_after(opts[:timeout]) do
                         puts "Uploading #{filename} (#{Time.now.to_s}) (#{i}/#{num_files})"
 
                         data = File.open(filename, "rb") { |f| f.read }
