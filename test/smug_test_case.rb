@@ -14,6 +14,7 @@ class SmugTestCase < Test::Unit::TestCase
     end
 
     def execute(command)
+        @command_output = nil
         $stdout = @stdout = StringIO.new
         $stderr = @stderr = StringIO.new
 
