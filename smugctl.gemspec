@@ -1,11 +1,11 @@
 require 'rubygems'
 
 SPEC = Gem::Specification.new do |s|
-    s.name      = "smugctl"
-    s.version   = "0.1"
+    s.name      = "smugsync"
+    s.version   = "0.2"
     s.author    = "Alexander Dymo"
     s.email     = "adymo@kdevelop.org"
-    s.homepage  = "http://github.com/adymo/smugctl"
+    s.homepage  = "http://github.com/adymo/smugsync"
     s.platform  = Gem::Platform::RUBY
     s.summary   = "."
 
@@ -22,6 +22,6 @@ SPEC = Gem::Specification.new do |s|
     s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
 
     s.require_path      = "lib"
-    s.autorequire       = "smugctl"
+    s.autorequire       = "smugsync"
     s.has_rdoc          = false
 end

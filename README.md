@@ -1,11 +1,11 @@
-# SmugCtl
+# SmugSync
 The hacker-friendly command-line tool to synchronize your photos and videos two-way between your computer and SmugMug.
 
 Warning: this tool is not yet ready for usage unless you're willing to read the code and learn its restrictions and quirks yourself.
 
 
 ## How it works
-SmugCtl provides a command-line interface that is somewhat similar to git or svn (but without versioning of course).
+SmugSync provides a command-line interface that is somewhat similar to git or svn (but without versioning of course).
 
 To start, initialize a root directory for your SmugMug account:
 
