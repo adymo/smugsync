@@ -10,6 +10,7 @@ SmugSync provides a command-line interface that is somewhat similar to git or sv
 To start, initialize a root directory for your SmugMug account:
 
     smug init
+    smug fetch
 
 Albums are stored as subdirs inside the root directory. To upload an album, create a directory for it, copy your images and videos there and run
 
