@@ -42,8 +42,12 @@ class StatusCommandTest < SmugTestCase
         execute "fetch"
         execute "status"
         assert_same command_output, <<-END
-                    not_uploaded	Sample Folder 1/(4 files)
-                    not_uploaded	sample folder 2/(2 files)
+                    not_uploaded	Sample Folder 1/Pic 5.jpg
+                    not_uploaded	Sample Folder 1/pic 4.jpg
+                  not_downloaded	Sample Folder 1/pic 5.jpg
+                  not_downloaded	Sample Folder 1/Pic 2.jpg
+                  not_downloaded	Sample Folder 1/Pic 4.jpg
+                  not_downloaded	sAmple foLder 3/(2 files)
                     not_uploaded	sample folder 4/(2 files)
         END
     end

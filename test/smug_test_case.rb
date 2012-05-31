@@ -4,6 +4,7 @@ require 'smugctl'
 require 'assert_same'
 
 # mocks
+require 'mock/smug_server'
 require 'mock/command'
 require 'mock/oauth/tokens/request_token'
 
@@ -13,6 +14,10 @@ class SmugTestCase < Test::Unit::TestCase
 
     @@server_dir = File.expand_path(File.join(File.dirname(__FILE__), "server"))
     @@local_dir = File.expand_path(File.join(File.dirname(__FILE__), "local"))
+
+    def self.server_dir
+        @@server_dir
+    end
 
     def default_test
     end
