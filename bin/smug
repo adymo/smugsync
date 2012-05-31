@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'smugctl'
-require 'smugctl/console'
+require 'smugsync'
+require 'smugsync/console'

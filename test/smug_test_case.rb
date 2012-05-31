@@ -1,6 +1,6 @@
 require 'test/unit'
 require 'rubygems'
-require 'smugctl'
+require 'smugsync'
 require 'assert_same'
 
 # mocks
