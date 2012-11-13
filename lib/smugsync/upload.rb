@@ -1,5 +1,5 @@
 require 'system_timer'
-require 'md5'
+require 'digest/md5'
 require 'set'
 
 module Smug
@@ -75,7 +75,7 @@ Options:
 
                         req = {}
                         req['Content-Length'] = File.size(filename).to_s
-                        req['Content-MD5'] = MD5.hexdigest(data)
+                        req['Content-MD5'] = Digest::MD5.hexdigest(data)
                         req['X-Smug-AlbumID'] = album["id"].to_s
                         req['X-Smug-Version'] = '1.3.0'
                         req['X-Smug-FileName'] = filename
