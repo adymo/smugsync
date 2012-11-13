@@ -1,4 +1,6 @@
-require 'system_timer'
+if RUBY_VERSION < "1.9.0"
+    require 'system_timer'
+end
 require 'digest/md5'
 require 'set'
 
@@ -68,7 +70,7 @@ Options:
                 modified_albums << album
 
                 begin
-                    SystemTimer.timeout_after(opts[:timeout]) do
+                    with_timeout(opts[:timeout]) do
                         puts "Uploading #{filename} (#{Time.now.to_s}) (#{i}/#{num_files})"
 
                         data = File.open(filename, "rb") { |f| f.read }
@@ -105,6 +107,20 @@ Options:
     end
 
 private
+
+    def with_timeout(upload_timeout, &block)
+        if RUBY_VERSION < "1.9.0"
+            # older ruby need to use SystemTimer because ruby green thread timeout
+            # won't terminate threads that execute system calls
+            SystemTimer.timeout_after(upload_timeout) do
+                yield
+            end
+        else
+            timeout(upload_timeout) do
+                yield
+            end
+        end
+    end
 
     def albums
         # TODO: upload doesn't work without cache

@@ -14,7 +14,10 @@ SPEC = Gem::Specification.new do |s|
     s.add_dependency('trollop',         '>= 1.16.0')
     s.add_dependency('json',            '>= 1.6.0')
     s.add_dependency('oauth',           '>= 0.4.0')
-    s.add_dependency('system_timer',    '>= 1.2.0')
+
+    if RUBY_VERSION < "1.9.0"
+        s.add_dependency('system_timer',    '>= 1.2.0')
+    end
 
     s.files         = `git ls-files`.split("\n")
     s.test_files    = `git ls-files -- test/*`.split("\n")
