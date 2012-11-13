@@ -1,4 +1,6 @@
-$KCODE = 'u'
+if RUBY_VERSION < "1.9.0"
+    $KCODE = 'u'
+end
 
 commands = [
     ["init", "Initialize current folder as SmugMug folder and authorize with SmugMug"],
