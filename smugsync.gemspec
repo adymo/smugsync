@@ -9,7 +9,7 @@ SPEC = Gem::Specification.new do |s|
     s.platform  = Gem::Platform::RUBY
     s.summary   = "."
 
-    s.add_development_dependency('assert_same', '>= 0.1.0')
+    s.add_development_dependency('assert_same', '>= 0.3.0')
 
     s.add_dependency('trollop',         '>= 1.16.0')
     s.add_dependency('json',            '>= 1.6.0')
