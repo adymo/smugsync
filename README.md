@@ -34,3 +34,9 @@ To see the difference between your directory and SmugMug run
 
 ## Restrictions
 - Categories and subcategories are not supported.
+
+
+## Changelog
+- 0.3: Ruby 1.9 is supported
+- 0.2: First useful version, all commands work
+- 0.1: Initial release

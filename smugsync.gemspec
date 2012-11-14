@@ -2,7 +2,7 @@ require 'rubygems'
 
 SPEC = Gem::Specification.new do |s|
     s.name        = "smugsync"
-    s.version     = "0.2"
+    s.version     = "0.3"
     s.author      = "Alexander Dymo"
     s.email       = "adymo@kdevelop.org"
     s.homepage    = "http://github.com/adymo/smugsync"
